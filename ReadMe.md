@@ -6,8 +6,8 @@ Written in Python, using the Qt GUI framework.
 
 ![](Screenshot_QR_ScanGen.png)
 
-Portable executables can be downloaded from IPFS:
-Linux: [ipns://k2k4r8n9gxr9jyqe3jzge4tdykag41zu6xezzgnynlx8eist1dtupev1](https://ipfs.io/ipns/k2k4r8n9gxr9jyqe3jzge4tdykag41zu6xezzgnynlx8eist1dtupev1)
+Portable executables can be downloaded from IPFS:  
+Linux: [ipns://k2k4r8n9gxr9jyqe3jzge4tdykag41zu6xezzgnynlx8eist1dtupev1](https://ipfs.io/ipns/k2k4r8n9gxr9jyqe3jzge4tdykag41zu6xezzgnynlx8eist1dtupev1)  
 Windows: [ipns://k2k4r8mx3fftrqqnvk8kunbvy4r0jndvcecalm6x6khl8xv0mo8o5d0y](https://ipfs.io/ipns/k2k4r8mx3fftrqqnvk8kunbvy4r0jndvcecalm6x6khl8xv0mo8o5d0y)
 
 ## Run from source:
