@@ -56,6 +56,11 @@ class ScanGen(QMainWindow, Ui_MainWindow):
     def __init__(self, ):
         super(ScanGen, self).__init__()
         self.setupUi(self)
+        bundle_dir = getattr(
+            sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
+        self.setWindowIcon(QtGui.QIcon(os.path.join(bundle_dir, 'Icon.svg')))
+        self.setWindowTitle("QR ScanGen")
+
         self.update_text.connect(self.UpdateText)
         self.update_qr_code.connect(self.UpdateQrCode)
         self.search_for_cameras.connect(self.SearchForCameras)
