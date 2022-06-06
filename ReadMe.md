@@ -6,9 +6,8 @@ Written in Python, using the Qt GUI framework.
 
 ![](Screenshot_QR_ScanGen.png)
 
-Portable executables can be downloaded from IPFS:  
-Linux: [ipns://k2k4r8n9gxr9jyqe3jzge4tdykag41zu6xezzgnynlx8eist1dtupev1](https://ipfs.io/ipns/k2k4r8n9gxr9jyqe3jzge4tdykag41zu6xezzgnynlx8eist1dtupev1)  
-Windows: [ipns://k2k4r8mx3fftrqqnvk8kunbvy4r0jndvcecalm6x6khl8xv0mo8o5d0y](https://ipfs.io/ipns/k2k4r8mx3fftrqqnvk8kunbvy4r0jndvcecalm6x6khl8xv0mo8o5d0y)
+Portable executables (for Linux and Windows, so far) can be downloaded from IPFS:  
+[ipns://ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen/Releases.md.html](http://ipfs.io/ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen/Releases.md.html)
 
 ## Run from source:
 0. Prerequisites: You need [Python3](python.org) and a library manager for it (such as pip) installed on your computer.
@@ -47,4 +46,4 @@ _You may need to replace pip3 with pip and python3 with python depending on your
 - open URL in browser
 
 This project is also hosted on IPFS:
-[ipns://k2k4r8pruzwh3tmwsgypcimzfn9fq8svg7ikhyzq75bgl9nb1ncywhkn](https://ipfs.io/ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen)
+[ipns://k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup](https://ipfs.io/ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen)

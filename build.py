@@ -1,7 +1,7 @@
+from __project__ import version, project_name
 import shutil
 import os
 import platform
-project_name = "QR-ScanGen"
 hidden_imports = [
     "pywifi",
     "pyzbar",
@@ -28,11 +28,11 @@ if (platform.system().lower() == "windows"):
     cmd += f" --add-binary={pyzbardir}\\libzbar-64.dll;."
     os.system(cmd)
     shutil.move(os.path.join("dist", f"{project_name}.exe"),
-                os.path.join("dist", f"{project_name}_{platform.system().lower()}_{platform.machine().lower()}.exe"))
+                os.path.join("dist", f"{project_name}_v{version}_{platform.system().lower()}_{platform.machine().lower().replace('x86_64', 'amd64')}.exe"))
 else:
     cmd = f"pyinstaller --name='{project_name}' --windowed --onefile --add-data='Icon.svg:.' __main__.py"
     for lib in hidden_imports:
         cmd += f" --hidden-import={lib}"
     os.system(cmd)
     shutil.move(os.path.join("dist", project_name),
-                os.path.join("dist", f"{project_name}_{platform.system().lower()}_{platform.machine().lower()}"))
+                os.path.join("dist", f"{project_name}_v{version}_{platform.system().lower()}_{platform.machine().lower().replace('x86_64', 'amd64')}.AppImage"))
