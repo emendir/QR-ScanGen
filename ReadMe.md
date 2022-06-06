@@ -45,5 +45,6 @@ _You may need to replace pip3 with pip and python3 with python depending on your
 - connect to WiFi when scanning WiFi code: errors 'permission denied' on linux, untested on other OSs
 - open URL in browser
 
-This project is also hosted on IPFS:
+## Links
+This project's IPFS URL:  
 [ipns://k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup](https://ipfs.io/ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen)
