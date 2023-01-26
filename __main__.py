@@ -12,6 +12,8 @@ from PyQt5.QtCore import pyqtSignal
 import time
 import os
 import pyperclip
+import webbrowser
+import platform
 
 if __file__ and os.path.exists(__file__):
     os.chdir(os.path.dirname(__file__))
@@ -30,10 +32,6 @@ def QR_Decoder(image):
 
         cv2.putText(image, obj.data.decode(), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
         return {"image": image, "type": obj.type, "data": obj.data}
-
-
-def GenerateQrCode(text):
-    return qrcode.make(text)
 
 
 if os.path.exists('ScanGen.ui'):
@@ -70,7 +68,8 @@ class ScanGen(QMainWindow, Ui_MainWindow):
         print("ready")
 
     def UpdateQrCode(self):
-        qr_code = GenerateQrCode(self.data)
+        qr_code = self.GenerateQrCode(self.data)
+
         image = ImageQt(qr_code)
         self.qr_code_lbl.setPixmap(QtGui.QPixmap.fromImage(image))
 
@@ -173,9 +172,9 @@ class ScanGen(QMainWindow, Ui_MainWindow):
 
                             self.data = self.text_txbx.toPlainText()
                             self.update_qr_code.emit()
-                    image = QtGui.QImage(
+                    self.camera_image = QtGui.QImage(
                         frame.data, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
-                    self.scanner_video_lbl.setPixmap(QtGui.QPixmap.fromImage(image))
+                    self.scanner_video_lbl.setPixmap(QtGui.QPixmap.fromImage(self.camera_image))
 
                     code = cv2.waitKey(10)
                     if code == ord('q'):
@@ -216,15 +215,43 @@ class ScanGen(QMainWindow, Ui_MainWindow):
             # profile.cipher = pywifi.const.CIPHER_TYPE_CCMP
             profile.key = password
 
-            wifi = pywifi.PyWiFi()
-            iface = wifi.interfaces()[0]
-            profile = iface.add_network_profile(profile)
-            iface.connect(profile)
-            # ERROR permission denied on ubuntu
+            try:
+                wifi = pywifi.PyWiFi()
+                iface = wifi.interfaces()[0]
+                profile = iface.add_network_profile(profile)
+                iface.connect(profile)
+            except PermissionError:
+                # handling permission denied error on linux
+                if platform.system() == 'Linux':
+                    os.system(f"nmcli dev wifi connect '{ssid}' password '{password}'")
+
+        if IsWebsite(self.data):
+            webbrowser.open_new_tab(self.data)
+
+    def GenerateQrCode(self, text):
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=3,
+            border=4,   # number of pixels is  this * box_size
+        )
+        qr.add_data(text)   # give QRCode object our text to encode
+        qr.make(fit=True)   # generate QR code from our text
+        # we would like our QR code to be about as high as the camera image displayed
+        desired_height = self.camera_image.height()
+        # get the number of squares along an edge of the QR code
+        qr_height_squares = len(qr.get_matrix())
+        # calculate how many pixels should be used to display one square of the QR code
+        qr.box_size = int((desired_height)/(qr_height_squares+2*qr.border))
+        return qr.make_image()  # generate and return QR code image
 
     def closeEvent(self, event):
         self.closing = True
         event.accept()
+
+
+def IsWebsite(text):
+    return text.startswith("https://") or text.startswith("http://")
 
 
 if __name__ == '__main__':
