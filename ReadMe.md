@@ -6,8 +6,18 @@ Written in Python, using the Qt GUI framework.
 
 ![](Screenshot_QR_ScanGen.png)
 
-Portable executables (for Linux and Windows, so far) can be downloaded from IPFS:  
+Portable executables (jsut for Linux so far) can be downloaded from IPFS:  
 [ipns://ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen/Releases.md.html](http://ipfs.io/ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen/Releases.md.html)
+
+## Features
+- scan and decode QR-code from camera to text
+- encode text to QR-code
+- scanning actions for recognised content:
+  - auto-copy to clipboard
+  - auto-open URLs in default browser
+  - auto-connect to WiFi networks (Linux provided nmcli is installed, Windows 10 tested, MacOS untested)
+- save QR-code image to file (click on it)
+- no unnecessary click-work for user, all features in one simple page
 
 ## Run from source:
 0. Prerequisites: You need [Python3](python.org) and a library manager for it (such as pip) installed on your computer.
@@ -40,10 +50,6 @@ _You may need to replace pip3 with pip and python3 with python depending on your
 4. The executable binary for your computer's operating system and computer architecture will be located in the [dist](./dist) folder.
 
 
-
-## ToDo:
-- connect to WiFi when scanning WiFi code: errors 'permission denied' on linux, untested on other OSs
-- open URL in browser
 
 ## Links
 This project's IPFS URL:  

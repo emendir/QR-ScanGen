@@ -1,3 +1,4 @@
+from PyQt5.QtWidgets import QFileDialog
 import copy
 from PIL.ImageQt import ImageQt
 import qrcode
@@ -63,6 +64,8 @@ class ScanGen(QMainWindow, Ui_MainWindow):
         self.update_qr_code.connect(self.UpdateQrCode)
         self.search_for_cameras.connect(self.SearchForCameras)
         self.update_camera_list.connect(self.UpdateCameraList)
+        self.qr_code_lbl.mousePressEvent = self.SaveQR_File
+
         Thread(target=self.RunScanner, args=()).start()
         # self.search_for_cameras.emit()
         print("ready")
@@ -248,6 +251,17 @@ class ScanGen(QMainWindow, Ui_MainWindow):
     def closeEvent(self, event):
         self.closing = True
         event.accept()
+
+    def SaveQR_File(self, eventargs):
+        """Saves the currently displayed QR-Code to a file,
+        after opening a file dialog asking the user for the file path"""
+        filepath, ok = QFileDialog.getSaveFileName(
+            self, 'Save QR Code', "", ("Images (*.png)"))
+        if filepath:
+            if filepath[-4:].lower() != ".png":
+                print(filepath[-4:].lower())
+                filepath += ".png"
+            self.qr_code_lbl.pixmap().save(filepath)
 
 
 def IsWebsite(text):
