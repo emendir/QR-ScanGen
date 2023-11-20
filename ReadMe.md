@@ -1,3 +1,5 @@
+<style>img { width: 100%;}</style>
+
 # QR ScanGen
 
 A simple cross-platform QR code scanner and generator. Easy and fast to use, no buttons except to switch cameras. Scanned QR codes are automatically copied to clipboard.
@@ -32,7 +34,7 @@ Portable executables (jsut for Linux so far) can be downloaded from IPFS:
   ```
 3. Run the project:
   ```shell
-     python3 .
+  python3 .
   ```
 _You may need to replace pip3 with pip and python3 with python depending on your environment._
 
