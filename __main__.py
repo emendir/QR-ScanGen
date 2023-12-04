@@ -35,7 +35,9 @@ def QR_Decoder(image):
         return {"image": image, "type": obj.type, "data": obj.data}
 
 
-if os.path.exists('ScanGen.ui'):
+abs_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)))
+if os.path.exists(os.path.join(abs_dir, 'ScanGen.ui')):
+    os.chdir(abs_dir)
     Ui_MainWindow, QMainWindow = loadUiType('ScanGen.ui')
 else:
     from ScanGen import Ui_MainWindow
