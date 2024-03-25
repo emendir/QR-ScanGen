@@ -1,15 +1,17 @@
-from PyQt5.QtWidgets import QFileDialog
+import subprocess
+from PyQt6.QtWidgets import QFileDialog
 import copy
 from PIL.ImageQt import ImageQt
 import qrcode
 from threading import Thread
-from PyQt5 import QtGui, QtCore, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.uic import loadUiType
+from PyQt6 import QtGui, QtCore, QtWidgets
+from PyQt6.QtWidgets import QMainWindow, QApplication
+from PyQt6.uic import loadUiType
+from PyQt6.QtGui import QPixmap
 import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
-from PyQt5.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 import time
 import os
 import pyperclip
@@ -20,7 +22,7 @@ if __file__ and os.path.exists(__file__):
     os.chdir(os.path.dirname(__file__))
 
 
-def QR_Decoder(image):
+def qr_decoder(image):
     gray_img = cv2.cvtColor(image, 0)
     qr_code = decode(gray_img)
 
@@ -45,12 +47,12 @@ else:
 
 class ScanGen(QMainWindow, Ui_MainWindow):
     data = ""
-    update_qr_code = pyqtSignal()
-    update_text = pyqtSignal()
-    search_for_cameras = pyqtSignal()
-    update_camera_list = pyqtSignal(list)
+    update_qr_code_sig = pyqtSignal()
+    update_text_sig = pyqtSignal()
+    search_for_cameras_sig = pyqtSignal()
+    update_camera_list_sig = pyqtSignal(list)
 
-    camera_index = 0
+    current_camera_info = None
     radio_buttons = []
     closing = False
 
@@ -62,139 +64,160 @@ class ScanGen(QMainWindow, Ui_MainWindow):
         self.setWindowIcon(QtGui.QIcon(os.path.join(bundle_dir, 'Icon.svg')))
         self.setWindowTitle("QR ScanGen")
 
-        self.update_text.connect(self.UpdateText)
-        self.update_qr_code.connect(self.UpdateQrCode)
-        self.search_for_cameras.connect(self.SearchForCameras)
-        self.update_camera_list.connect(self.UpdateCameraList)
-        self.qr_code_lbl.mousePressEvent = self.SaveQR_File
+        self.update_text_sig.connect(self.update_text)
+        self.update_qr_code_sig.connect(self.update_qr_code)
+        self.search_for_cameras_sig.connect(self.search_for_cameras)
+        self.update_camera_list_sig.connect(self.udpate_camera_list)
+        self.qr_code_lbl.mousePressEvent = self.save_qr_file
 
-        Thread(target=self.RunScanner, args=()).start()
-        # self.search_for_cameras.emit()
+        Thread(target=self.run_scanner, args=()).start()
+        # self.search_for_cameras_sig.emit()
         print("ready")
 
-    def UpdateQrCode(self):
-        qr_code = self.GenerateQrCode(self.data)
+    def update_qr_code(self):
+        qr_code = self.generate_qr_code(self.data)
 
         image = ImageQt(qr_code)
         self.qr_code_lbl.setPixmap(QtGui.QPixmap.fromImage(image))
 
-    def UpdateText(self):
+    def update_text(self):
         self.text_txbx.setPlainText(self.data)
 
-    def ListCameraPorts(self):
+    def list_camera_ports(self):
         """
         Test the ports and returns a tuple with the available ports and the ones that are working.
         """
         non_working_ports = []
-        dev_port = 0
-        working_ports = []
-        available_ports = []
+        available_cameras = []
+
+        # iterate through ports starting at 0.
         # if there are more than 5 non working ports stop the testing.
+        dev_port = 0
         while len(non_working_ports) < 6:
-            if dev_port == self.camera_index:
-                print(f"Skipping port {dev_port} because it is in use.")
-                working_ports.append(dev_port)
+            if self.current_camera_info and dev_port == self.current_camera_info['port']:
+                available_cameras.append(self.current_camera_info)
             else:
                 camera = cv2.VideoCapture(dev_port)
-                if not camera.isOpened():
-                    non_working_ports.append(dev_port)
-                    print("Port %s is not working." % dev_port)
-                else:
+                if camera.isOpened():
                     is_reading, img = camera.read()
                     w = camera.get(3)
                     h = camera.get(4)
                     if is_reading:
-                        print("Port %s is working and reads images (%s x %s)" % (dev_port, h, w))
-                        working_ports.append(dev_port)
-                        if self.camera_index == "":  # if Scanner currently doesn't know which camera to use
-                            self.camera_index = dev_port
-                    else:
-                        print("Port %s for camera ( %s x %s) is present but does not read." %
-                              (dev_port, h, w))
-                        available_ports.append(dev_port)
-            dev_port += 1
-        return available_ports, working_ports, non_working_ports
+                        width = int(camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+                        height = int(camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                        fps = camera.get(cv2.CAP_PROP_FPS)
+                        camera_name = get_camera_name(dev_port)
 
-    def ChangeCamera(self, e):
-        self.camera_index = self.sender().cv2_index
+                        camera_info = {
+                            "port": dev_port,
+                            "name": camera_name,
+                            "width": width,
+                            "height": height,
+                            "fps": fps
+                        }
+                        available_cameras.append(camera_info)
+
+                else:
+                    non_working_ports.append(dev_port)
+                camera.release()
+            dev_port += 1
+        if not self.current_camera_info:  # if Scanner currently doesn't know which camera to use
+            self.current_camera_info = available_cameras[0]
+        return available_cameras
+
+    def change_camera(self, e):
+        self.current_camera_info = self.sender().camera_info
     testing_camera_ports = False
 
-    def SearchForCameras(self):
+    def search_for_cameras(self):
         if self.testing_camera_ports:
             return
         self.testing_camera_ports = True
 
         def _search_for_cameras():
-            working_cameras = self.ListCameraPorts()[1]
-            self.update_camera_list.emit(working_cameras)
+            working_cameras = self.list_camera_ports()
+            self.update_camera_list_sig.emit(working_cameras)
             self.testing_camera_ports = False
         Thread(target=_search_for_cameras, args=()).start()
 
-    def UpdateCameraList(self, working_cameras: list):
+    def udpate_camera_list(self, working_cameras: list):
         for radio_button in self.radio_buttons:
             try:
                 radio_button.deleteLater()
             except:
                 pass
-        for i in working_cameras:
-            radio_button = QtWidgets.QRadioButton(str(i), self.right_frame)
-            radio_button.cv2_index = i
-            if i == self.camera_index:
+        for cam_info in working_cameras:
+            label = f"{cam_info['port']} {cam_info['name']}"
+            radio_button = QtWidgets.QRadioButton(label, self.right_frame)
+            radio_button.camera_info = cam_info
+            if cam_info['port'] == self.current_camera_info['port']:
                 radio_button.setChecked(True)
-            radio_button.clicked.connect(self.ChangeCamera)
+            radio_button.clicked.connect(self.change_camera)
             self.right_frame_lyt.addWidget(radio_button)
             self.radio_buttons.append(radio_button)
 
-    def RunScanner(self):
-        # if self.camera_index == "":
-        #     self.camera_index = 0
+    def run_scanner(self):
+
         while True:  # camera usage session loop (new iteration only when user changes camera)
             if self.closing:
                 return
-            current_camera = copy.deepcopy(self.camera_index)
-            cap = cv2.VideoCapture(self.camera_index)
-            self.search_for_cameras.emit()
+            self.search_for_cameras_sig.emit()
+            while self.current_camera_info is None:
+                time.sleep(0.1)
+            current_camera_port = copy.deepcopy(self.current_camera_info['port'])
+            cap = cv2.VideoCapture(current_camera_port)
 
             try:
                 while True:
                     if self.closing:
+                        cap.release()
+
                         return
-                    if current_camera != self.camera_index:
+                    if current_camera_port != self.current_camera_info['port']:
+                        cap.release()
+
                         break
                     ret, frame = cap.read()
-                    result = QR_Decoder(frame)
+                    result = qr_decoder(frame)
                     if result is not None:
                         frame = result["image"]
                         data = result["data"].decode()
                         if data != self.data:
                             self.data = data
-                            self.update_text.emit()
-                            self.update_qr_code.emit()
-                            Thread(target=self.AnalyseCode, args=()).start()
+                            self.update_text_sig.emit()
+                            self.update_qr_code_sig.emit()
+                            Thread(target=self.analyse_scanned_code, args=()).start()
                             pyperclip.copy(self.data)
                     else:
                         if self.text_txbx.toPlainText() != self.data:
 
                             self.data = self.text_txbx.toPlainText()
-                            self.update_qr_code.emit()
-                    self.camera_image = QtGui.QImage(
-                        frame.data, frame.shape[1], frame.shape[0], QtGui.QImage.Format_RGB888).rgbSwapped()
-                    self.scanner_video_lbl.setPixmap(QtGui.QPixmap.fromImage(self.camera_image))
+                            self.update_qr_code_sig.emit()
+                    self.camera_image = convert_cv_qt(
+                        frame,
+                        self.scanner_video_lbl.width(),
+                        self.scanner_video_lbl.height()
+                    )
+                    self.scanner_video_lbl.setPixmap(self.camera_image)
 
                     code = cv2.waitKey(10)
                     if code == ord('q'):
+                        cap.release()
+
                         break
-            except:
-                print(f"Error working with camera {self.camera_index}")
-                self.camera_index = ""
-                self.search_for_cameras.emit()
-                while self.camera_index == "":
-                    print("waiting for camera")
+            except Exception as error:
+                print(error)
+                print(f"Error working with camera {self.current_camera_info['port']}")
+                cap.release()
+
+                self.current_camera_info = None
+                self.search_for_cameras_sig.emit()
+                while self.current_camera_info is None:
                     time.sleep(0.1)
 
-                # self.SearchForCameras()
+                # self.search_for_cameras()
 
-    def AnalyseCode(self):
+    def analyse_scanned_code(self):
         # WIFI analysis
         elements = [e.split(":") for e in self.data.split(";")]
         if len(elements) > 2 and elements[0][0] == "WIFI" and elements[0][1] == "S" and elements[1][0] == "T" and elements[2][0] == "P":
@@ -230,10 +253,10 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                 if platform.system() == 'Linux':
                     os.system(f"nmcli dev wifi connect '{ssid}' password '{password}'")
 
-        if IsWebsite(self.data):
+        if is_website(self.data):
             webbrowser.open_new_tab(self.data)
 
-    def GenerateQrCode(self, text):
+    def generate_qr_code(self, text):
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -250,11 +273,7 @@ class ScanGen(QMainWindow, Ui_MainWindow):
         qr.box_size = int((desired_height)/(qr_height_squares+2*qr.border))
         return qr.make_image()  # generate and return QR code image
 
-    def closeEvent(self, event):
-        self.closing = True
-        event.accept()
-
-    def SaveQR_File(self, eventargs):
+    def save_qr_file(self, eventargs):
         """Saves the currently displayed QR-Code to a file,
         after opening a file dialog asking the user for the file path"""
         filepath, ok = QFileDialog.getSaveFileName(
@@ -265,9 +284,31 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                 filepath += ".png"
             self.qr_code_lbl.pixmap().save(filepath)
 
+    def closeEvent(self, event):
+        self.closing = True
+        event.accept()
 
-def IsWebsite(text):
+
+def convert_cv_qt(cv_img, width, height):
+    """Convert from an opencv image to QPixmap"""
+    rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+    h, w, ch = rgb_image.shape
+    bytes_per_line = ch * w
+    convert_to_Qt_format = QtGui.QImage(
+        rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
+    p = convert_to_Qt_format.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio)
+    return QPixmap.fromImage(p)
+
+
+def is_website(text):
     return text.startswith("https://") or text.startswith("http://")
+
+
+def get_camera_name(camera_index):
+    if platform.system() == 'Linux':
+        return ''
+    else:
+        return ''
 
 
 if __name__ == '__main__':
@@ -275,4 +316,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = ScanGen()
     main.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
