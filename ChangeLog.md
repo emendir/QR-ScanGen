@@ -1,3 +1,6 @@
+# v1.2.0 (2024-03-25)
+- migrate to PyQt6
+
 # v1.2.0 (2023-10-17)
 - save QR code to file by clicking it
 

@@ -2,7 +2,7 @@ numpy
 opencv_python
 Pillow==9.2.0
 pyperclip
-PyQt5
+PyQt6
 pywifi
 pyzbar
 qrcode

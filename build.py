@@ -7,15 +7,18 @@ hidden_imports = [
     "pyzbar",
     "qrcode",
 ]
+excluded_imports = [
+    "PyQt5"
+]
 # converting *.ui files to *.py files
 for dirname, dirnames, filenames in os.walk("."):
     if dirname == "./Plugins" or "./.git" in dirname:
         continue
     for filename in filenames:
         path = os.path.join(dirname, filename)
-        if(filename[-2:] == "ui"):
+        if (filename[-2:] == "ui"):
             print(filename)
-            os.system(f"pyuic5 {path} -o {path[:-2]}py")
+            os.system(f"pyuic6 {path} -o {path[:-2]}py")
 if os.path.exists("build"):
     shutil.rmtree("build")
 # shutil.rmtree("dist")
@@ -35,6 +38,8 @@ else:
     cmd = f"pyinstaller --name='{project_name}' --windowed --onefile --add-data='Icon.svg:.' __main__.py"
     for lib in hidden_imports:
         cmd += f" --hidden-import={lib}"
+    for lib in excluded_imports:
+        cmd += f" --exclude={lib}"
     cmd = "export QT_DEBUG_PLUGINS=1;"+cmd
     print(cmd)
     os.system(cmd)
