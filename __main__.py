@@ -1,4 +1,7 @@
+from threading import Event
+from PyQt6 import QtCore, QtGui, QtWidgets
 import subprocess
+
 from PyQt6.QtWidgets import QFileDialog
 import copy
 from PIL.ImageQt import ImageQt
@@ -33,7 +36,8 @@ def qr_decoder(image):
         pts = pts.reshape((-1, 1, 2))
         cv2.polylines(image, [pts], True, (0, 255, 0), 3)
 
-        cv2.putText(image, obj.data.decode(), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+        cv2.putText(image, obj.data.decode(), (x, y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
         return {"image": image, "type": obj.type, "data": obj.data}
 
 
@@ -63,7 +67,8 @@ class ScanGen(QMainWindow, Ui_MainWindow):
             sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
         self.setWindowIcon(QtGui.QIcon(os.path.join(bundle_dir, 'Icon.svg')))
         self.setWindowTitle("QR ScanGen")
-
+        self.layed_out_vertically = False
+        self.camera_initialised = Event()
         self.update_text_sig.connect(self.update_text)
         self.update_qr_code_sig.connect(self.update_qr_code)
         self.search_for_cameras_sig.connect(self.search_for_cameras)
@@ -73,6 +78,27 @@ class ScanGen(QMainWindow, Ui_MainWindow):
         Thread(target=self.run_scanner, args=()).start()
         # self.search_for_cameras_sig.emit()
         print("ready")
+
+    def resizeEvent(self, _=None):
+        self.update_qr_code()
+        self.text_txbx.setFixedHeight(self.height() // 6)
+        if self.width() < self.height() and not self.right_frame_lyt.isEmpty():
+            self.layed_out_vertically = True
+            self.right_frame_lyt.removeWidget(self.qr_code_lbl)
+            self.cam_frm_lyt.insertWidget(0,self.qr_code_lbl)
+            self.scanner_video_lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            self.qr_code_lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+            # self.right_frame_lyt.setVisible(False)
+            self.images_frm_lyt.removeWidget(self.right_frame)
+        elif self.width() > self.height() and self.right_frame_lyt.isEmpty():
+            self.layed_out_vertically = False
+            self.cam_frm_lyt.removeWidget(self.qr_code_lbl)
+            self.right_frame_lyt.addWidget(self.qr_code_lbl)
+            self.images_frm_lyt.addWidget(self.right_frame)
+            self.scanner_video_lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignTop|QtCore.Qt.AlignmentFlag.AlignTrailing)
+            self.qr_code_lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight|QtCore.Qt.AlignmentFlag.AlignTop|QtCore.Qt.AlignmentFlag.AlignTrailing)
+            
+            # self.right_frame_lyt.setVisible(True)
 
     def update_qr_code(self):
         qr_code = self.generate_qr_code(self.data)
@@ -153,18 +179,20 @@ class ScanGen(QMainWindow, Ui_MainWindow):
             if cam_info['port'] == self.current_camera_info['port']:
                 radio_button.setChecked(True)
             radio_button.clicked.connect(self.change_camera)
-            self.right_frame_lyt.addWidget(radio_button)
+            self.cam_frm_lyt.addWidget(radio_button)
             self.radio_buttons.append(radio_button)
 
     def run_scanner(self):
 
-        while True:  # camera usage session loop (new iteration only when user changes camera)
+        # camera usage session loop (new iteration only when user changes camera)
+        while True:
             if self.closing:
                 return
             self.search_for_cameras_sig.emit()
             while self.current_camera_info is None:
                 time.sleep(0.1)
-            current_camera_port = copy.deepcopy(self.current_camera_info['port'])
+            current_camera_port = copy.deepcopy(
+                self.current_camera_info['port'])
             cap = cv2.VideoCapture(current_camera_port)
 
             try:
@@ -186,7 +214,8 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                             self.data = data
                             self.update_text_sig.emit()
                             self.update_qr_code_sig.emit()
-                            Thread(target=self.analyse_scanned_code, args=()).start()
+                            Thread(target=self.analyse_scanned_code,
+                                   args=()).start()
                             pyperclip.copy(self.data)
                     else:
                         if self.text_txbx.toPlainText() != self.data:
@@ -195,10 +224,13 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                             self.update_qr_code_sig.emit()
                     self.camera_image = convert_cv_qt(
                         frame,
-                        self.scanner_video_lbl.width(),
-                        self.scanner_video_lbl.height()
+                        self.scanner_video_lbl.width() - 5,
+                        self.scanner_video_lbl.height() - 5
                     )
                     self.scanner_video_lbl.setPixmap(self.camera_image)
+                    if not self.camera_initialised.is_set():
+                        self.camera_initialised.set()
+                        self.resizeEvent()
 
                     code = cv2.waitKey(10)
                     if code == ord('q'):
@@ -207,7 +239,8 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                         break
             except Exception as error:
                 print(error)
-                print(f"Error working with camera {self.current_camera_info['port']}")
+                print(f"Error working with camera {
+                      self.current_camera_info['port']}")
                 cap.release()
 
                 self.current_camera_info = None
@@ -251,7 +284,8 @@ class ScanGen(QMainWindow, Ui_MainWindow):
             except PermissionError:
                 # handling permission denied error on linux
                 if platform.system() == 'Linux':
-                    os.system(f"nmcli dev wifi connect '{ssid}' password '{password}'")
+                    os.system(f"nmcli dev wifi connect '{
+                              ssid}' password '{password}'")
 
         if is_website(self.data):
             webbrowser.open_new_tab(self.data)
@@ -266,11 +300,14 @@ class ScanGen(QMainWindow, Ui_MainWindow):
         qr.add_data(text)   # give QRCode object our text to encode
         qr.make(fit=True)   # generate QR code from our text
         # we would like our QR code to be about as high as the camera image displayed
-        desired_height = self.camera_image.height()
+        if self.camera_initialised.is_set():
+            desired_height = min(self.right_frame.height(),self.right_frame.width()) - 2
+        else:
+            desired_height = 300
         # get the number of squares along an edge of the QR code
         qr_height_squares = len(qr.get_matrix())
         # calculate how many pixels should be used to display one square of the QR code
-        qr.box_size = int((desired_height)/(qr_height_squares+2*qr.border))
+        qr.box_size = int((desired_height) / (qr_height_squares + qr.border))
         return qr.make_image()  # generate and return QR code image
 
     def save_qr_file(self, eventargs):
@@ -296,7 +333,8 @@ def convert_cv_qt(cv_img, width, height):
     bytes_per_line = ch * w
     convert_to_Qt_format = QtGui.QImage(
         rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
-    p = convert_to_Qt_format.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio)
+    p = convert_to_Qt_format.scaled(
+        width, height, Qt.AspectRatioMode.KeepAspectRatio)
     return QPixmap.fromImage(p)
 
 
