@@ -4,5 +4,5 @@ Pillow==10.4.0
 pyperclip
 PyQt6
 pywifi
-pyzbar
+pyzbar==0.1.9
 qrcode
