@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 dynamic = ["dependencies"]
-name = "qr-scangen"
+name = "QR-ScanGen"
 authors = [{ name = "emendir" }]
-version = "1.3.1"
+version = "1.3.2"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["src/qr_scangen/requirements.txt"]}

@@ -14,13 +14,14 @@ from PyQt6.uic import loadUiType
 from PyQt6.QtGui import QPixmap
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode
 from PyQt6.QtCore import pyqtSignal, Qt
 import time
 import os
 import pyperclip
 import webbrowser
 import platform
+
+from pyzbar.pyzbar import decode
 
 if __file__ and os.path.exists(__file__):
     os.chdir(os.path.dirname(__file__))
@@ -218,9 +219,8 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                             self.data = data
                             self.update_text_sig.emit()
                             self.update_qr_code_sig.emit()
-                            Thread(target=self.analyse_scanned_code,
+                            Thread(target=self.run_qr_actions,
                                    args=()).start()
-                            pyperclip.copy(self.data)
                     else:
                         if self.text_txbx.toPlainText() != self.data:
 
@@ -254,46 +254,57 @@ class ScanGen(QMainWindow, Ui_MainWindow):
 
                 # self.search_for_cameras()
 
-    def analyse_scanned_code(self):
+    def run_qr_actions(self):
+        # COPY
+        try:
+            pyperclip.copy(self.data)
+        except Exception as e:
+            print(e)
+        
         # WIFI analysis
-        elements = [e.split(":") for e in self.data.split(";")]
-        if len(elements) > 2 and elements[0][0] == "WIFI" and elements[0][1] == "S" and elements[1][0] == "T" and elements[2][0] == "P":
-            ssid = elements[0][2]
-            type = elements[1][1]
-            password = elements[2][1]
+        try:
+            elements = [e.split(":") for e in self.data.split(";")]
+            if len(elements) > 2 and elements[0][0] == "WIFI" and elements[0][1] == "S" and elements[1][0] == "T" and elements[2][0] == "P":
+                ssid = elements[0][2]
+                type = elements[1][1]
+                password = elements[2][1]
 
-            import pywifi
+                import pywifi
 
-            profile = pywifi.Profile()
-            profile.ssid = ssid
-            profile.auth = pywifi.const.AUTH_ALG_OPEN
-            if type == "" or type.lower == "none":
-                profile.akm.append(pywifi.const.AKM_TYPE_NONE)
-            if type == "WPA":
-                profile.akm.append(pywifi.const.AKM_TYPE_WPA)
-            if type == "WPAPSK":
-                profile.akm.append(pywifi.const.AKM_TYPE_WPAPSK)
-            if type == "WPA2":
-                profile.akm.append(pywifi.const.AKM_TYPE_WPA2)
-            if type == "WPA2PSK":
-                profile.akm.append(pywifi.const.AKM_TYPE_WPA2PSK)
-            # profile.cipher = pywifi.const.CIPHER_TYPE_CCMP
-            profile.key = password
+                profile = pywifi.Profile()
+                profile.ssid = ssid
+                profile.auth = pywifi.const.AUTH_ALG_OPEN
+                if type == "" or type.lower == "none":
+                    profile.akm.append(pywifi.const.AKM_TYPE_NONE)
+                if type == "WPA":
+                    profile.akm.append(pywifi.const.AKM_TYPE_WPA)
+                if type == "WPAPSK":
+                    profile.akm.append(pywifi.const.AKM_TYPE_WPAPSK)
+                if type == "WPA2":
+                    profile.akm.append(pywifi.const.AKM_TYPE_WPA2)
+                if type == "WPA2PSK":
+                    profile.akm.append(pywifi.const.AKM_TYPE_WPA2PSK)
+                # profile.cipher = pywifi.const.CIPHER_TYPE_CCMP
+                profile.key = password
 
-            try:
-                wifi = pywifi.PyWiFi()
-                iface = wifi.interfaces()[0]
-                profile = iface.add_network_profile(profile)
-                iface.connect(profile)
-            except PermissionError:
-                # handling permission denied error on linux
-                if platform.system() == 'Linux':
-                    os.system(f"nmcli dev wifi connect '{
-                              ssid}' password '{password}'")
-
-        if is_website(self.data):
-            webbrowser.open_new_tab(self.data)
-
+                try:
+                    wifi = pywifi.PyWiFi()
+                    iface = wifi.interfaces()[0]
+                    profile = iface.add_network_profile(profile)
+                    iface.connect(profile)
+                except PermissionError:
+                    # handling permission denied error on linux
+                    if platform.system() == 'Linux':
+                        os.system(f"nmcli dev wifi connect '{
+                                  ssid}' password '{password}'")
+        except Exception as e:
+            print(e)
+        
+        try:
+            if is_website(self.data):
+                webbrowser.open_new_tab(self.data)
+        except Exception as e:
+            print(e)
     def generate_qr_code(self, text):
         qr = qrcode.QRCode(
             version=1,

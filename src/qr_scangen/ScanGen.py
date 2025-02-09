@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file './ScanGen.ui'
+# Form implementation generated from reading ui file './src/qr_scangen/ScanGen.ui'
 #
 # Created by: PyQt6 UI code generator 6.7.1
 #

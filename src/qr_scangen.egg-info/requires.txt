@@ -1,8 +1,0 @@
-numpy
-opencv_python
-Pillow==10.4.0
-pyperclip
-PyQt6
-pywifi
-pyzbar
-qrcode
