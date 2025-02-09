@@ -1,6 +1,6 @@
 numpy
 opencv_python
-Pillow==9.2.0
+Pillow==10.4.0
 pyperclip
 PyQt6
 pywifi
