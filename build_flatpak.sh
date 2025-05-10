@@ -1,6 +1,8 @@
 #!/bin/bash
 """:"
 
+
+flatpak install flathub com.riverbankcomputing.PyQt.BaseApp/x86_64/6.8
 flatpak-builder --user --install --force-clean build-dir flatpak.yaml
 
 

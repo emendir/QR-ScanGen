@@ -1,2 +1,3 @@
-from src.qr_scangen import main
-main()
+import os, sys
+os.chdir (os.path.join(os.path.dirname(__file__), "src"))
+os.system(f"{sys.executable} .")
