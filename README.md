@@ -2,7 +2,10 @@
 
 # QR ScanGen
 
-A simple cross-platform QR code scanner and generator. Easy and fast to use, no buttons except to switch cameras. Scanned QR codes are automatically copied to clipboard.
+_A simple cross-platform QR code scanner and generator._
+
+Easy and fast to use, no buttons except to switch cameras.
+Scanned QR codes are automatically copied to clipboard, open websites & connect to WiFi networks.
 
 Written in Python, using the Qt GUI framework.
 

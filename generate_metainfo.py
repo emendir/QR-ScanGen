@@ -8,6 +8,41 @@ try:
 except ModuleNotFoundError:
     import tomli as tomllib  # Python <3.11
 
+import re
+from pathlib import Path
+
+def load_long_description():
+    readme_candidates = ["README.md", "README.rst", "README.txt", "README"]
+
+    # Find a valid README file
+    readme_path = next((Path(f) for f in readme_candidates if Path(f).is_file()), None)
+    if not readme_path:
+        raise FileNotFoundError("No README file found.")
+
+    with readme_path.open(encoding="utf-8") as f:
+        content = f.read()
+
+    # Split into paragraphs
+    paragraphs = re.split(r"\n\s*\n", content)
+
+    for para in paragraphs:
+        para = para.strip()
+
+        # Skip headings: Markdown or reStructuredText style
+        if para.startswith("#") or re.match(r"^[=\-]{3,}$", para):
+            continue
+
+        # Skip paragraphs in italic (Markdown-style)
+        if re.match(r"^[_*].*[_*]$", para) and not re.search(r"\*\*", para):
+            continue
+
+        # Normalize line breaks, ensure it's >80 chars
+        para_flat = " ".join(para.splitlines()).strip()
+        if len(para_flat) >= 80:
+            return para_flat
+
+    raise ValueError("No suitable paragraph found in README.")
+
 def generate_metainfo(pyproject_path: str, app_id: str, output_path):
     with open(pyproject_path, "rb") as f:
         pyproject = tomllib.load(f)
@@ -33,10 +68,7 @@ def generate_metainfo(pyproject_path: str, app_id: str, output_path):
 
     # Description (long enough first paragraph)
     description = ET.SubElement(root, "description")
-    ET.SubElement(description, "p").text = (
-        f"{summary_raw} It allows users to quickly generate and scan QR codes "
-        f"with a user-friendly interface on multiple platforms."
-    )
+    ET.SubElement(description, "p").text =        load_long_description(    )
 
     # Developer
     developer = ET.SubElement(root, "developer", id=author_id)

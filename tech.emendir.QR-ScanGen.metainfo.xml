@@ -5,7 +5,7 @@
   <name>QR-ScanGen</name>
   <summary>A simple cross-platform QR code scanner and generator</summary>
   <description>
-    <p>A simple cross-platform QR code scanner and generator It allows users to quickly generate and scan QR codes with a user-friendly interface on multiple platforms.</p>
+    <p>Easy and fast to use, no buttons except to switch cameras. Scanned QR codes are automatically copied to clipboard, open websites &amp; connect to WiFi networks.</p>
   </description>
   <developer id="emendir.tech">
     <name>Emendir</name>
