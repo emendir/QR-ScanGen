@@ -28,7 +28,7 @@ modules:
       - type: archive
         url: https://linuxtv.org/downloads/zbar/zbar-0.23.93.tar.gz
         sha256: 78ae427a529f0399561bc198de5c2c7ca3f11d05fa9e903e65e501168433d218
-
+  - python3-modules.json
   - name: qr-scangen
     buildsystem: simple
     build-commands:
@@ -38,18 +38,18 @@ modules:
     sources:
       - type: dir
         path: .
-    build-options:
-      build-args: [ "--share=network" ]
+    # build-options:
+    #   build-args: [ "--share=network" ]
 
 finish-args:
-  - --socket=x11
   - --socket=wayland
-  - --socket=system-bus
+  - --socket=fallback-x11
+  # - --socket=system-bus
   - --share=network
   - --filesystem=home
   - --device=dri
   - --share=ipc
   - --device=all
-  - --talk-name=org.freedesktop.NetworkManager.Settings
-  - --talk-name=org.freedesktop.portal.Freedesktop
-  - --talk-name=org.freedesktop.portal.Camera
+  - --system-talk-name=org.freedesktop.NetworkManager.Settings
+  # - --talk-name=org.freedesktop.portal.Freedesktop
+  # - --talk-name=org.freedesktop.portal.Camera

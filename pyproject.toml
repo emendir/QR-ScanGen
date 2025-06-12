@@ -5,8 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 dynamic = ["dependencies"]
 name = "QR-ScanGen"
-authors = [{ name = "emendir" }]
+authors = [{ name = "Emendir", email = "dev@emendir.tech" }]
 version = "1.4.0"
+license = "CC0-1.0"
+description = "A simple cross-platform QR code scanner and generator"
+
+[project.urls]
+Homepage = "https://github.com/emendir/QR-ScanGen"
+Repository = "https://github.com/emendir/QR-ScanGen"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["src/qr_scangen/requirements.txt"]}

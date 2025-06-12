@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<component type="desktop">
+  <id>tech.emendir.QR-ScanGen</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>QR-ScanGen</name>
+  <summary>A simple cross-platform QR code scanner and generator</summary>
+  <description>
+    <p>A simple cross-platform QR code scanner and generator It allows users to quickly generate and scan QR codes with a user-friendly interface on multiple platforms.</p>
+  </description>
+  <developer id="emendir.tech">
+    <name>Emendir</name>
+  </developer>
+  <url type="homepage">https://github.com/emendir/QR-ScanGen</url>
+  <launchable type="desktop-id">tech.emendir.QR-ScanGen.desktop</launchable>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="1.4.0" date="2025-06-12" />
+  </releases>
+</component>

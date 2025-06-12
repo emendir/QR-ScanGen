@@ -1,9 +1,13 @@
+meson-python
+scikit-build
+
 sdbus-networkmanager
 numpy
 opencv_python
 Pillow==10.4.0
 pyperclip
-PyQt6
 pywifi
 pyzbar==0.1.9
 qrcode
+
+PyQt6
