@@ -1,4 +1,4 @@
-app-id: tech.emendir.qr-scangen
+app-id: tech.emendir.QR-ScanGen
 runtime: org.kde.Platform
 runtime-version: "6.8"
 sdk: org.kde.Sdk
@@ -33,6 +33,8 @@ modules:
     buildsystem: simple
     build-commands:
       - pip3 install --no-build-isolation --prefix=/app .
+      - install -D src/qr_scangen/Icon.svg /app/share/icons/hicolor/scalable/apps/tech.emendir.QR-ScanGen.svg
+      - install -D tech.emendir.QR-ScanGen.desktop /app/share/applications/tech.emendir.QR-ScanGen.desktop
     sources:
       - type: dir
         path: .
@@ -42,11 +44,12 @@ modules:
 finish-args:
   - --socket=x11
   - --socket=wayland
+  - --socket=system-bus
   - --share=network
   - --filesystem=home
   - --device=dri
-  - --talk-name=org.freedesktop.ScreenSaver
   - --share=ipc
   - --device=all
+  - --talk-name=org.freedesktop.NetworkManager.Settings
   - --talk-name=org.freedesktop.portal.Freedesktop
   - --talk-name=org.freedesktop.portal.Camera

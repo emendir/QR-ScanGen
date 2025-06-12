@@ -274,38 +274,20 @@ class ScanGen(QMainWindow, Ui_MainWindow):
             elements = [e.split(":") for e in self.data.split(";")]
             if len(elements) > 2 and elements[0][0] == "WIFI" and elements[0][1] == "S" and elements[1][0] == "T" and elements[2][0] == "P":
                 ssid = elements[0][2]
-                type = elements[1][1]
+                auth_type = elements[1][1]
                 password = elements[2][1]
 
-                import pywifi
-
-                profile = pywifi.Profile()
-                profile.ssid = ssid
-                profile.auth = pywifi.const.AUTH_ALG_OPEN
-                if type == "" or type.lower == "none":
-                    profile.akm.append(pywifi.const.AKM_TYPE_NONE)
-                if type == "WPA":
-                    profile.akm.append(pywifi.const.AKM_TYPE_WPA)
-                if type == "WPAPSK":
-                    profile.akm.append(pywifi.const.AKM_TYPE_WPAPSK)
-                if type == "WPA2":
-                    profile.akm.append(pywifi.const.AKM_TYPE_WPA2)
-                if type == "WPA2PSK":
-                    profile.akm.append(pywifi.const.AKM_TYPE_WPA2PSK)
-                # profile.cipher = pywifi.const.CIPHER_TYPE_CCMP
-                profile.key = password
-
+        
                 try:
-                    wifi = pywifi.PyWiFi()
-                    iface = wifi.interfaces()[0]
-                    profile = iface.add_network_profile(profile)
-                    iface.connect(profile)
-                except PermissionError:
+                    
+                    connect_to_wifi_pywifi(ssid, auth_type, password)
+                except Exception:
                     # handling permission denied error on linux
                     if platform.system() == 'Linux':
-                        os.system(f"nmcli dev wifi connect '{
-                                  ssid}' password '{password}'")
+                        connect_to_wifi_dbus(ssid, auth_type, password)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             print(e)
         
         try:
@@ -372,8 +354,9 @@ def get_camera_name(camera_index):
     else:
         return ''
 
-
+from .wifi_utils import connect_to_wifi_dbus, connect_to_wifi_pywifi
 def main():
+    
     app = QApplication(sys.argv)
     main = ScanGen()
     main.show()

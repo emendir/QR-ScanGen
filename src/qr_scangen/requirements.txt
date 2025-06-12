@@ -1,3 +1,4 @@
+sdbus-networkmanager
 numpy
 opencv_python
 Pillow==10.4.0

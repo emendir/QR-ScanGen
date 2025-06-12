@@ -1,3 +1,8 @@
+## v1.4.0 (2025-06-12)
+
+- QR generator now works when no cameras are connected
+- for WiFi connections on Linux, implemented D-Bus to replace nmcli
+
 ## v1.3.1 (2025-02-9)
 
 - bugfix: fixed crash on setting QR-Code text before camera initialised

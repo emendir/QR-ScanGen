@@ -1,10 +1,24 @@
 #!/bin/bash
 """:"
 
+# the absolute path of this script's directory
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+PROJECT_DIR=$SCRIPT_DIR
 
-flatpak install flathub com.riverbankcomputing.PyQt.BaseApp/x86_64/6.8
-flatpak-builder --user --install --force-clean build-dir flatpak.yaml
 
+if [ -z $FLATPAK_REPO_DIR ];then
+  echo 'Please define `FLATPAK_REPO_DIR`'
+exit 1
+fi
+# pip install $PROJECT_DIR
+
+
+flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak install --user flathub com.riverbankcomputing.PyQt.BaseApp/x86_64/6.8
+flatpak-builder --user --install  --install-deps-from=flathub --force-clean build-dir flatpak.yaml
+
+flatpak build-export $FLATPAK_REPO_DIR build-dir
+flatpak build-bundle $FLATPAK_REPO_DIR dist/qr_scangen-current.flatpak tech.emendir.QR-ScanGen 
 
 
 
