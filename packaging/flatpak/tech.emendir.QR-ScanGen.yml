@@ -33,13 +33,13 @@ modules:
     buildsystem: simple
     build-commands:
       - pip3 install --no-build-isolation --prefix=/app .
+      - install -D packaging/share/tech.emendir.QR-ScanGen.desktop /app/share/applications/tech.emendir.QR-ScanGen.desktop
       - install -D src/qr_scangen/Icon.svg /app/share/icons/hicolor/scalable/apps/tech.emendir.QR-ScanGen.svg
-      - install -D tech.emendir.QR-ScanGen.desktop /app/share/applications/tech.emendir.QR-ScanGen.desktop
     sources:
+      # - type: git
+      #   url: https://github.com/emendir/QR-ScanGen
       - type: dir
-        path: .
-    # build-options:
-    #   build-args: [ "--share=network" ]
+        path: ../../
 
 finish-args:
   - --socket=wayland

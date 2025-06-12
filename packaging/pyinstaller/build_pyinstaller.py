@@ -5,10 +5,10 @@ exec python3 "$0" "$@"
 exit 0
 """
 
-from metadata import version, project_name
 import shutil
 import os
 import platform
+import toml
 HIDDEN_IMPORTS = [
     "pywifi",
     "pyzbar",
@@ -19,13 +19,21 @@ EXCLUDED_IMPORTS = [
 ]
 
 
-WORKDIR = os.path.dirname(__file__)
-SOURCE_DIR = os.path.join(WORKDIR, "src")
+WORK_DIR = os.path.dirname(__file__)
+PROJ_DIR=os.path.abspath(os.path.join(WORK_DIR, "..", ".."))
+SOURCE_DIR = os.path.join(PROJ_DIR, "src")
 ENTRY_POINT = os.path.join(SOURCE_DIR, "__main__.py")
 
 DATA_FILES = [
     os.path.join("qr_scangen", "Icon.svg")
 ]
+
+
+with open(os.path.join(PROJ_DIR,'pyproject.toml'), 'r') as file:
+    data = toml.load(file)
+    project_name = data['project']['name']
+    version = data['project']['version']
+    
 # converting *.ui files to *.py files
 for dirname, dirnames, filenames in os.walk("."):
     if dirname == "./Plugins" or "./.git" in dirname:
@@ -46,7 +54,8 @@ for lib in EXCLUDED_IMPORTS:
 for file in DATA_FILES:
     command_appendages += (
         f" --add-data='{os.path.join(SOURCE_DIR, file)}:"
-        f"{os.path.dirname(file)}'"
+        # f"{os.path.dirname(file)}'"
+        ".'"
     )
 
 

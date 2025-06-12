@@ -15,7 +15,7 @@ Homepage = "https://github.com/emendir/QR-ScanGen"
 Repository = "https://github.com/emendir/QR-ScanGen"
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["src/qr_scangen/requirements.txt"]}
+dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
 where = ["src"]

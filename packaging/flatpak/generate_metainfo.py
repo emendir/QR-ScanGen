@@ -2,7 +2,7 @@
 import sys
 import xml.etree.ElementTree as ET
 from datetime import date
-
+import os
 try:
     import tomllib  # Python 3.11+
 except ModuleNotFoundError:
@@ -11,11 +11,11 @@ except ModuleNotFoundError:
 import re
 from pathlib import Path
 
-def load_long_description():
+def load_long_description(directory:str):
     readme_candidates = ["README.md", "README.rst", "README.txt", "README"]
 
     # Find a valid README file
-    readme_path = next((Path(f) for f in readme_candidates if Path(f).is_file()), None)
+    readme_path = next((Path(directory)/Path(f) for f in readme_candidates if (Path(directory)/Path(f)).is_file()), None)
     if not readme_path:
         raise FileNotFoundError("No README file found.")
 
@@ -68,7 +68,7 @@ def generate_metainfo(pyproject_path: str, app_id: str, output_path):
 
     # Description (long enough first paragraph)
     description = ET.SubElement(root, "description")
-    ET.SubElement(description, "p").text =        load_long_description(    )
+    ET.SubElement(description, "p").text =        load_long_description(os.path.dirname(pyproject_path)    )
 
     # Developer
     developer = ET.SubElement(root, "developer", id=author_id)
@@ -101,5 +101,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 4:
         print("Usage: python generate_metainfo.py pyproject.toml com.example.MyApp com.example.MyApp.desktop")
         sys.exit(1)
-    print(sys.argv)
+    # print(sys.argv)
     generate_metainfo(sys.argv[1], sys.argv[2], sys.argv[3])
