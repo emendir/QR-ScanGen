@@ -17,7 +17,7 @@ Portable executables (jsut for Linux so far) can be downloaded from IPFS:
 - scanning actions for recognised content:
   - auto-copy to clipboard
   - auto-open URLs in default browser
-  - auto-connect to WiFi networks (Linux provided nmcli is installed, Windows 10 tested, MacOS untested)
+  - auto-connect to WiFi networks (Linux tested, Windows 10 tested, MacOS untested)
 - save QR-code image to file (click on it)
 - no unnecessary click-work for user, all features in one simple page
 
