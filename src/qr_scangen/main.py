@@ -1,5 +1,5 @@
 import sys
-from threading import Event
+from threading import Event, Lock
 from PyQt6 import QtCore, QtGui, QtWidgets
 import subprocess
 
@@ -8,6 +8,7 @@ import copy
 from PIL.ImageQt import ImageQt
 import qrcode
 from threading import Thread
+from PIL import Image
 from PyQt6 import QtGui, QtCore, QtWidgets
 from PyQt6.QtWidgets import QMainWindow, QApplication
 from PyQt6.uic import loadUiType
@@ -67,7 +68,7 @@ class ScanGen(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         bundle_dir = getattr(
             sys, '_MEIPASS', os.path.abspath(os.path.dirname(__file__)))
-        self.setWindowIcon(QtGui.QIcon(os.path.join(bundle_dir,"qr_scangen", 'Icon.svg')))
+        self.setWindowIcon(QtGui.QIcon(os.path.join(bundle_dir, 'Icon.svg')))
         self.setWindowTitle("QR ScanGen")
         self.layed_out_vertically = False
         self.camera_initialised = Event()
@@ -75,12 +76,20 @@ class ScanGen(QMainWindow, Ui_MainWindow):
         self.update_qr_code_sig.connect(self.update_qr_code)
         self.search_for_cameras_sig.connect(self.search_for_cameras)
         self.update_camera_list_sig.connect(self.udpate_camera_list)
+        self.text_txbx.textChanged.connect(self.text_changed)
         self.qr_code_lbl.mousePressEvent = self.save_qr_file
+        self.text_lock = Lock()
 
         Thread(target=self.run_scanner, args=()).start()
         # self.search_for_cameras_sig.emit()
         print("ready")
+    def text_changed(self, _=None):
+        with self.text_lock:
+            if self.text_txbx.toPlainText() != self.data:
 
+                self.data = self.text_txbx.toPlainText()
+                self.update_qr_code_sig.emit()
+        
     def resizeEvent(self, _=None):
         self.update_qr_code()
         self.text_txbx.setFixedHeight(self.height() // 6)
@@ -108,7 +117,7 @@ class ScanGen(QMainWindow, Ui_MainWindow):
     def update_qr_code(self):
         qr_code = self.generate_qr_code(self.data)
 
-        image = ImageQt(qr_code)
+        image = ImageQt((qr_code.get_image()))
         self.qr_code_lbl.setPixmap(QtGui.QPixmap.fromImage(image))
 
     def update_text(self):
@@ -152,7 +161,7 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                     non_working_ports.append(dev_port)
                 camera.release()
             dev_port += 1
-        if not self.current_camera_info:  # if Scanner currently doesn't know which camera to use
+        if not self.current_camera_info and available_cameras:  # if Scanner currently doesn't know which camera to use
             self.current_camera_info = available_cameras[0]
         return available_cameras
 
@@ -195,7 +204,9 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                 return
             self.search_for_cameras_sig.emit()
             while self.current_camera_info is None:
-                time.sleep(0.1)
+                time.sleep(1)
+                print("Waiting for cameras...")
+                self.search_for_cameras_sig.emit()
             current_camera_port = copy.deepcopy(
                 self.current_camera_info['port'])
             cap = cv2.VideoCapture(current_camera_port)
@@ -215,17 +226,13 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                     if result is not None:
                         frame = result["image"]
                         data = result["data"].decode()
-                        if data != self.data:
-                            self.data = data
-                            self.update_text_sig.emit()
-                            self.update_qr_code_sig.emit()
-                            Thread(target=self.run_qr_actions,
-                                   args=()).start()
-                    else:
-                        if self.text_txbx.toPlainText() != self.data:
-
-                            self.data = self.text_txbx.toPlainText()
-                            self.update_qr_code_sig.emit()
+                        with self.text_lock:
+                            if data != self.data:
+                                self.data = data
+                                self.update_text_sig.emit()
+                                self.update_qr_code_sig.emit()
+                                Thread(target=self.run_qr_actions,
+                                       args=()).start()
                     self.camera_image = convert_cv_qt(
                         frame,
                         self.scanner_video_lbl.width() - 5,
@@ -236,21 +243,22 @@ class ScanGen(QMainWindow, Ui_MainWindow):
                         self.camera_initialised.set()
                         self.resizeEvent()
 
-                    code = cv2.waitKey(10)
-                    if code == ord('q'):
-                        cap.release()
-
-                        break
+                    # code = cv2.waitKey(10)
+                    # if code == ord('q'):
+                    #     cap.release()
+                    # 
+                    #     break
             except Exception as error:
                 print(error)
                 print(f"Error working with camera {
                       self.current_camera_info['port']}")
                 cap.release()
 
+                self.scanner_video_lbl.clear()
                 self.current_camera_info = None
-                self.search_for_cameras_sig.emit()
-                while self.current_camera_info is None:
-                    time.sleep(0.1)
+                # self.search_for_cameras_sig.emit()
+                # while self.current_camera_info is None:
+                #     time.sleep(0.1)
 
                 # self.search_for_cameras()
 
