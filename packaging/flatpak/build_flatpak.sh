@@ -67,7 +67,7 @@ flatpak run org.flatpak.Builder \
 cd $SCRIPT_DIR
 
 flatpak build-export $FLATPAK_REPO_DIR $FLATPAK_BUILD_DIR
-flatpak build-bundle $FLATPAK_REPO_DIR $PROJECT_DIR/dist/QR-ScanGen_TESTING.flatpak $APP_ID 
+flatpak build-bundle $FLATPAK_REPO_DIR $PROJECT_DIR/dist/${APP_ID}_Testing.flatpak $APP_ID 
 
 
 
