@@ -28,18 +28,19 @@ modules:
       - type: archive
         url: https://linuxtv.org/downloads/zbar/zbar-0.23.93.tar.gz
         sha256: 78ae427a529f0399561bc198de5c2c7ca3f11d05fa9e903e65e501168433d218
-  - python3-modules.json
+  - generated_modules/python3-modules-auto.yml
   - name: qr-scangen
     buildsystem: simple
     build-commands:
-      - pip3 install --no-build-isolation --prefix=/app .
+      - pip3 install --no-build-isolation --prefix=/app --no-deps .
       - install -D packaging/share/tech.emendir.QR-ScanGen.desktop /app/share/applications/tech.emendir.QR-ScanGen.desktop
       - install -D src/qr_scangen/Icon.svg /app/share/icons/hicolor/scalable/apps/tech.emendir.QR-ScanGen.svg
     sources:
-      # - type: git
-      #   url: https://github.com/emendir/QR-ScanGen
-      - type: dir
-        path: ../../
+      - type: git
+        url: https://github.com/emendir/QR-ScanGen
+        tag: v1.4.1
+      # - type: dir
+      #   path: ../../../
 
 finish-args:
   - --socket=wayland
@@ -52,4 +53,4 @@ finish-args:
   - --device=all
   - --system-talk-name=org.freedesktop.NetworkManager.Settings
   # - --talk-name=org.freedesktop.portal.Freedesktop
-  # - --talk-name=org.freedesktop.portal.Camera
+  - --talk-name=org.freedesktop.portal.Camera

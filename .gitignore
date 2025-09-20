@@ -1,0 +1,30 @@
+# >>> CLEANUP
+
+# This section contains patterns to be deleted by `make clean`
+build
+*.egg-info
+**/.mypy_cache/
+__pycache__
+.pytest_cache
+.ruff_cache
+.benchmarks
+.ccls-cache
+
+*.pyc
+*.log
+*.bkp
+
+include
+packaging/flatpak/build-dir*
+packaging/flatpak/.flatpak-builder
+.flatpak-builder
+QR-ScanGen.spec
+# <<< CLEANUP
+dist
+
+IconWorkspace
+Releases.md
+
+_hanuki
+hanuki.toml
+index.html
