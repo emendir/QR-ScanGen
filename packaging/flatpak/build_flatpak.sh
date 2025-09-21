@@ -51,62 +51,62 @@ echo "MANIFEST: $MANIFEST_FILE"
 flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 flatpak install -y --user flathub org.flatpak.Builder
 
-REQS_AUTO=$SCRIPT_DIR/requirements-auto.txt
-REQS_MANUAL=$SCRIPT_DIR/requirements-manual.txt
-REQS_EXCLUSIONS=$SCRIPT_DIR/requirements-exclusions.txt
-pip install $PROJECT_DIR --force-reinstall
-# reinstall python packages that are editable installs (needed for listing dependencies)
-pkgs=$(pipdeptree --packages . -f --warn silence \
-  | sed 's/^[[:space:]]*//' \
-  | sort -u \
-  | grep -v "$APP_NAME" \
-  | grep -i "@" || true \
-  | awk '{print $1}')
-if [ -n "$pkgs" ]; then
-    echo "$pkgs" | while read -r pkg_name; do
-        echo "Reinstalling $pkg_name"
-        pip install --force-reinstall "$pkg_name"
-    done
-else
-    echo "No packages to reinstall."
-fi
-
-if [ -e $MANIFEST_GEN_DIR ];then
-  rm -rf $MANIFEST_GEN_DIR
-fi
-mkdir -p $MANIFEST_GEN_DIR
-# list all python dependencies recursively with versions
-pipdeptree --packages $APP_NAME -f --warn silence \
-  | sed 's/^[[:space:]]*//' \
-  | sort -u \
-  | grep -v -i "^$APP_NAME" \
-  | grep -v "/"  \
-  | grep -v "Editable" \
-  | tee $REQS_AUTO
-
-## Filter auto-generated python dependecies using exclusions list
-if [ -e $REQS_EXCLUSIONS ];then
-  tmp_file="$(mktemp)"
-  # Build grep pattern from exclusions (anchored at start of line, before ==)
-  pattern=$(sed 's/^/^/; s/$/==/' "$REQS_EXCLUSIONS" | paste -sd'|' -)
-  # If pattern is empty (no exclusions), just copy the file
-  if [[ -z "$pattern" ]]; then
-      cp "$REQS_AUTO" "$tmp_file"
-  else
-      grep -Ev "$pattern" "$REQS_AUTO" > "$tmp_file"
-  fi
-  mv "$tmp_file" "$REQS_AUTO"
-fi
-
-## Generate Flatpak modules from requirements files
-PYVER="${PYTHON_VERSION//./}"
-req2flatpak --requirements-file $REQS_AUTO --target-platforms $PYVER-x86_64 $PYVER-aarch64 -o $MANIFEST_GEN_DIR/python3-modules-auto.yml
-if [ -e $SCRIPT_DIR/requirements-manual.txt ];then
-  req2flatpak --requirements-file $SCRIPT_DIR/requirements-manual.txt --target-platforms $PYVER-x86_64 $PYVER-aarch64 -o $MANIFEST_GEN_DIR/python3-modules-manual.yml
-
-  # Patch python module builds for packages that should ignore system installs
-  sed -i 's/pip3 install /pip3 install --ignore-installed /' $MANIFEST_GEN_DIR/python3-modules-manual.yml
-fi
+# REQS_AUTO=$SCRIPT_DIR/requirements-auto.txt
+# REQS_MANUAL=$SCRIPT_DIR/requirements-manual.txt
+# REQS_EXCLUSIONS=$SCRIPT_DIR/requirements-exclusions.txt
+# pip install $PROJECT_DIR --force-reinstall
+# # reinstall python packages that are editable installs (needed for listing dependencies)
+# pkgs=$(pipdeptree --packages . -f --warn silence \
+#   | sed 's/^[[:space:]]*//' \
+#   | sort -u \
+#   | grep -v "$APP_NAME" \
+#   | grep -i "@" || true \
+#   | awk '{print $1}')
+# if [ -n "$pkgs" ]; then
+#     echo "$pkgs" | while read -r pkg_name; do
+#         echo "Reinstalling $pkg_name"
+#         pip install --force-reinstall "$pkg_name"
+#     done
+# else
+#     echo "No packages to reinstall."
+# fi
+#
+# if [ -e $MANIFEST_GEN_DIR ];then
+#   rm -rf $MANIFEST_GEN_DIR
+# fi
+# mkdir -p $MANIFEST_GEN_DIR
+# # list all python dependencies recursively with versions
+# pipdeptree --packages $APP_NAME -f --warn silence \
+#   | sed 's/^[[:space:]]*//' \
+#   | sort -u \
+#   | grep -v -i "^$APP_NAME" \
+#   | grep -v "/"  \
+#   | grep -v "Editable" \
+#   | tee $REQS_AUTO
+#
+# ## Filter auto-generated python dependecies using exclusions list
+# if [ -e $REQS_EXCLUSIONS ];then
+#   tmp_file="$(mktemp)"
+#   # Build grep pattern from exclusions (anchored at start of line, before ==)
+#   pattern=$(sed 's/^/^/; s/$/==/' "$REQS_EXCLUSIONS" | paste -sd'|' -)
+#   # If pattern is empty (no exclusions), just copy the file
+#   if [[ -z "$pattern" ]]; then
+#       cp "$REQS_AUTO" "$tmp_file"
+#   else
+#       grep -Ev "$pattern" "$REQS_AUTO" > "$tmp_file"
+#   fi
+#   mv "$tmp_file" "$REQS_AUTO"
+# fi
+#
+# ## Generate Flatpak modules from requirements files
+# PYVER="${PYTHON_VERSION//./}"
+# req2flatpak --requirements-file $REQS_AUTO --target-platforms $PYVER-x86_64 $PYVER-aarch64 -o $MANIFEST_GEN_DIR/python3-modules-auto.yml
+# if [ -e $SCRIPT_DIR/requirements-manual.txt ];then
+#   req2flatpak --requirements-file $SCRIPT_DIR/requirements-manual.txt --target-platforms $PYVER-x86_64 $PYVER-aarch64 -o $MANIFEST_GEN_DIR/python3-modules-manual.yml
+#
+#   # Patch python module builds for packages that should ignore system installs
+#   sed -i 's/pip3 install /pip3 install --ignore-installed /' $MANIFEST_GEN_DIR/python3-modules-manual.yml
+# fi
 
 
 cd $PROJECT_DIR
@@ -136,28 +136,30 @@ flatpak run org.flatpak.Builder \
   $MANIFEST_FILE #  \
   # --sandbox 
 flatpak build-export $FLATPAK_REPO_DIR $FLATPAK_BUILD_DIR_X86
-
 # bundle for x86_64
 flatpak build-bundle $FLATPAK_REPO_DIR $DIST_DIR/${APP_NAME}_v${APP_VERSION}_linux_x86_64.flatpak $APP_ID --arch=x86_64
+# run linter
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder builddir $FLATPAK_BUILD_DIR_X86
 
 
-# aarch64 build
-flatpak run org.flatpak.Builder \
-  --arch=aarch64 \
-  --force-clean --ccache \
-  --user --install \
-  --install-deps-from=flathub \
-  --mirror-screenshots-url=https://dl.flathub.org/media/ \
-  --repo=$FLATPAK_REPO_DIR \
-  --state-dir=$FLATPAK_STATE_DIR \
-  $FLATPAK_BUILD_DIR_AARCH \
-  $MANIFEST_FILE  # \
-  # --sandbox 
-flatpak build-export $FLATPAK_REPO_DIR $FLATPAK_BUILD_DIR_AARCH
-
-# bundle for aarch64
-flatpak build-bundle $FLATPAK_REPO_DIR $DIST_DIR/${APP_NAME}_v${APP_VERSION}_linux_aarch64.flatpak $APP_ID --arch=aarch64
-
+# # aarch64 build
+# flatpak run org.flatpak.Builder \
+#   --arch=aarch64 \
+#   --force-clean --ccache \
+#   --user --install \
+#   --install-deps-from=flathub \
+#   --mirror-screenshots-url=https://dl.flathub.org/media/ \
+#   --repo=$FLATPAK_REPO_DIR \
+#   --state-dir=$FLATPAK_STATE_DIR \
+#   $FLATPAK_BUILD_DIR_AARCH \
+#   $MANIFEST_FILE  # \
+#   # --sandbox 
+# flatpak build-export $FLATPAK_REPO_DIR $FLATPAK_BUILD_DIR_AARCH
+#
+# # bundle for aarch64
+# flatpak build-bundle $FLATPAK_REPO_DIR $DIST_DIR/${APP_NAME}_v${APP_VERSION}_linux_aarch64.flatpak $APP_ID --arch=aarch64
+# run linter
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder builddir $FLATPAK_BUILD_DIR_AARCH
 
 
 echo "

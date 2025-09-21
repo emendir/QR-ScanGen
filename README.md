@@ -9,10 +9,7 @@ Scanned QR codes are automatically copied to clipboard, open websites & connect 
 
 Written in Python, using the Qt GUI framework.
 
-![](Screenshot_QR_ScanGen.png)
-
-Portable executables (jsut for Linux so far) can be downloaded from IPFS:  
-[ipns://ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen/Releases.md.html](http://ipfs.io/ipns/k2k4r8nismm5mmgrox2fci816xvj4l4cudnuc55gkfoealjuiaexbsup#QR-ScanGen/Releases.md.html)
+![](docs/media/QR-ScanGen-Screenshot.png)
 
 ## Features
 
@@ -25,17 +22,55 @@ Portable executables (jsut for Linux so far) can be downloaded from IPFS:
 - save QR-code image to file (click on it)
 - no unnecessary click-work for user, all features in one simple page
 
-## Download
+## Download and Installation
 
 Head over to the [releases page](https://github.com/emendir/QR-ScanGen/releases/) to download compiled binaries.
 I maintain packages for:
 
-- Linux:
-  - AppImage
-  - flatpak
-- Windows:
-  - EXE (portable) _Currently only for older versions of QR-ScanGen_ 
-- MacOS: _none_
+### Linux:
+- AppImage (x86-64) (fully featured)
+- flatpak (x86-64, aarch64) (no clipboard, and WiFi connection only after running: `flatpak override --user --socket=system-bus tech.emendir.QR-ScanGen`)
+- Pip:
+```sh
+# prerequisites
+sudo apt install -y python3-zbar
+
+# install app
+pip install qr-scangen
+
+# run app:
+qr-scangen
+
+# if the above fails, use:
+python -m qr_scangen
+```
+### Windows:
+- EXE (portable)
+- Pip:
+  1. Download and install prerequisites: https://www.microsoft.com/en-US/download/details.aspx?id=40784
+  2. Install and run app:
+```
+# install app
+pip install qr-scangen
+
+# run app:
+qr-scangen
+
+# if the above fails, use:
+python -m qr_scangen
+```
+### MacOS:
+- Pip (untested - try this):
+```
+# install app
+pip install qr-scangen
+
+# run app:
+qr-scangen
+
+# if the above fails, use:
+python -m qr_scangen
+```
 
 If no packages are available for your OS, see the section below on how to run this project from source.
 

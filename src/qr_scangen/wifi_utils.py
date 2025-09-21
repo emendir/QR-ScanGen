@@ -1,10 +1,13 @@
-import sdbus
-from uuid import uuid4
-from sdbus_block.networkmanager import NetworkManagerSettings
-from sdbus_block.networkmanager import NetworkManagerConnectionProperties
-
-
 import pywifi
+
+import platform
+
+if platform.system().lower() == "linux":
+    import sdbus
+    from uuid import uuid4
+    from sdbus_block.networkmanager import NetworkManagerSettings
+    from sdbus_block.networkmanager import NetworkManagerConnectionProperties
+
 
 def connect_to_wifi_pywifi(ssid: str, auth_type: str, password: str):
     profile = pywifi.Profile()
@@ -27,45 +30,41 @@ def connect_to_wifi_pywifi(ssid: str, auth_type: str, password: str):
     profile = iface.add_network_profile(profile)
     iface.connect(profile)
 
+
 def connect_to_wifi_dbus(ssid: str, auth_type: str, password: str):
     match auth_type:
         case "WPA":
             auth_type = "wpa"
         case "WPAPSK":
-            auth_type="wpa-psk"
+            auth_type = "wpa-psk"
         case "WPA2":
             auth_type = "wpa2"
         case "WPA2PSK":
-            auth_type="wpa2-psk"
+            auth_type = "wpa2-psk"
     sdbus.set_default_bus(sdbus.sd_bus_open_system())
     if connection_dpath := add_wifi_psk_connection(
-    conn_id=ssid,
-    uuid=uuid4(),
-    ssid=ssid,
-    psk=password,
-    interface_name="",
-    auto=True,
-    save=True,
-        
+        conn_id=ssid,
+        uuid=uuid4(),
+        ssid=ssid,
+        psk=password,
+        interface_name="",
+        auto=True,
+        save=True,
     ):
         print(f"Path of the new connection: {connection_dpath}")
     else:
         print("Error: No new connection created.")
 
 
-
-
-
 def add_wifi_psk_connection(
-    
-    conn_id:str,
-    uuid:str,
-    ssid:str,
-    psk:str,
-    interface_name:str,
-    auto:bool,
-    save:bool,
- ) -> str:
+    conn_id: str,
+    uuid: str,
+    ssid: str,
+    psk: str,
+    interface_name: str,
+    auto: bool,
+    save: bool,
+) -> str:
     """Add a temporary (not yet saved) network connection profile
     :param Namespace args: autoconnect, conn_id, psk, save, ssid, uuid
     :return: dbus connection path of the created connection profile
@@ -99,7 +98,7 @@ def add_wifi_psk_connection(
     }
 
     # To bind the new connection to a specific interface, use this:
-    if  interface_name:
+    if interface_name:
         properties["connection"]["interface-name"] = ("s", interface_name)
 
     s = NetworkManagerSettings()
@@ -108,4 +107,3 @@ def add_wifi_psk_connection(
     connection_settings_dbus_path = addconnection(properties)
     created = "created and saved" if save else "created"
     return connection_settings_dbus_path
-

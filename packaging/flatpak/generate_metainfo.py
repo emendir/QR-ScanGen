@@ -75,6 +75,7 @@ def generate_metainfo(pyproject_path: str, app_id: str, output_path):
     root = ET.Element("component", type="desktop")
     ET.SubElement(root, "id").text = app_id
     ET.SubElement(root, "metadata_license").text = license
+    ET.SubElement(root, "project_license").text = license
     ET.SubElement(root, "name").text = name
     ET.SubElement(root, "summary").text = summary
 
@@ -121,11 +122,37 @@ def generate_metainfo(pyproject_path: str, app_id: str, output_path):
         releases_elem, "release", version=version, date=date.today().isoformat()
     )
 
+    # Load manual metadata if available
+    manual_path = os.path.join(os.path.dirname(__file__), "manual_metainfo.xml")
+    if os.path.exists(manual_path):
+        append_manual_metainfo(root, manual_path)
+    else:
+        print("SKIPPING appending manual metainfo")
+
     # Output to file
     tree = ET.ElementTree(root)
     ET.indent(tree, space="  ")
     tree.write(output_path, encoding="utf-8", xml_declaration=True)
     print(f"Generated {output_path} with Flathub-compatible metadata.")
+
+
+def append_manual_metainfo(root, manual_path: str):
+    """Load and append extra XML fragments under the <component> root."""
+    if not os.path.isfile(manual_path):
+        return
+
+    with open(manual_path, "rb") as f:
+        content = f.read().strip()
+
+    try:
+        # Wrap in a dummy root so we can parse multiple top-level tags
+        wrapper = f"<extra>{content.decode('utf-8')}</extra>"
+        extra_root = ET.fromstring(wrapper)
+    except ET.ParseError as e:
+        raise ValueError(f"Invalid XML in {manual_path}: {e}")
+
+    for child in list(extra_root):
+        root.append(child)
 
 
 if __name__ == "__main__":

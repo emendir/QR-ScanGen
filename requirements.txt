@@ -1,7 +1,8 @@
 meson-python
 scikit-build
 
-sdbus-networkmanager
+sdbus-networkmanager; sys_platform == 'linux'
+comtypes; sys_platform == 'windows'
 numpy
 opencv_python
 Pillow==10.4.0
